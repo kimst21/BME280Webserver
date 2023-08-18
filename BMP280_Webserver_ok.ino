@@ -1,4 +1,4 @@
-// Load Wi-Fi library
+// Wi-Fi 라이브러리 로드
 #include <WiFi.h>
 #include <Wire.h>
 #include <Adafruit_BME280.h>
@@ -8,36 +8,36 @@
 
 Adafruit_BME280 bme; // I2C
 
-// Replace with your network credentials
-const char* ssid = "U+NetE51C";
-const char* password = "DA9969P73#";
+// 네트워크 자격 증명으로 바꾸기
+const char* ssid = " ";
+const char* password = " ";
 
-// Set web server port number to 80
+// 웹 서버 포트 번호를 80으로 설정
 WiFiServer server(80);
 
-// Variable to store the HTTP request
+// HTTP 요청을 저장하는 변수
 String header;
 
-// Current time
+// 현재시간
 unsigned long currentTime = millis();
-// Previous time
+// 이전시간
 unsigned long previousTime = 0; 
-// Define timeout time in milliseconds (example: 2000ms = 2s)
+// 시간 초과 시간을 밀리초 단위로 정의합니다(예: 2000ms = 2초).
 const long timeoutTime = 2000;
 
 void setup() {
   Serial.begin(115200);
   bool status;
 
-  // default settings
-  // (you can also pass in a Wire library object like &Wire2)
+  // 기본 설정
+  // &Wire2와 같은 와이어 라이브러리 객체를 전달할 수도 있습니다.
   //status = bme.begin();  
   if (!bme.begin(0x76)) {
     Serial.println("Could not find a valid BME280 sensor, check wiring!");
     while (1);
   }
 
-  // Connect to Wi-Fi network with SSID and password
+  // SSID와 비밀번호로 Wi-Fi 네트워크에 연결
   Serial.print("Connecting to ");
   Serial.println(ssid);
   WiFi.begin(ssid, password);
@@ -54,31 +54,31 @@ void setup() {
 }
 
 void loop(){
-  WiFiClient client = server.available();   // Listen for incoming clients
+  WiFiClient client = server.available();   // 들어오는 클라이언트에 귀 기울이기
 
-  if (client) {                             // If a new client connects,
+  if (client) {                             // 새 클라이언트가 연결되는 경우,
     currentTime = millis();
     previousTime = currentTime;
-    Serial.println("New Client.");          // print a message out in the serial port
-    String currentLine = "";                // make a String to hold incoming data from the client
-    while (client.connected() && currentTime - previousTime <= timeoutTime) {  // loop while the client's connected
+    Serial.println("New Client.");          // 직렬 포트에서 메시지를 인쇄합니다.
+    String currentLine = "";                // 클라이언트에서 들어오는 데이터를 저장할 문자열을 만듭니다.
+    while (client.connected() && currentTime - previousTime <= timeoutTime) {  //  루프가 클라이언트가 연결되어 있는 동안
       currentTime = millis();
-      if (client.available()) {             // if there's bytes to read from the client,
-        char c = client.read();             // read a byte, then
-        Serial.write(c);                    // print it out the serial monitor
+      if (client.available()) {             // 클라이언트로부터 읽을 바이트가 있는 경우,
+        char c = client.read();             // 바이트를 읽은 다음
+        Serial.write(c);                    // 직렬 모니터를 인쇄합니다.
         header += c;
-        if (c == '\n') {                    // if the byte is a newline character
-          // if the current line is blank, you got two newline characters in a row.
-          // that's the end of the client HTTP request, so send a response:
+        if (c == '\n') {                    // 바이트가 개행 문자인 경우
+          // 현재 줄이 비어 있으면 줄 바꿈 문자 두 개가 연속으로 표시됩니다.
+          // 이 클라이언트 HTTP 요청의 끝이므로 응답을 보내세요:
           if (currentLine.length() == 0) {
-            // HTTP headers always start with a response code (e.g. HTTP/1.1 200 OK)
-            // and a content-type so the client knows what's coming, then a blank line:
+            // HTTP 헤더는 항상 응답 코드(예: HTTP/1.1 200 OK)로 시작합니다.
+            // 고객이 무엇이 올지 알 수 있도록 내용 유형을 지정한 다음 빈 줄을 표시합니다:
             client.println("HTTP/1.1 200 OK");
             client.println("Content-type:text/html");
             client.println("Connection: close");
             client.println();
             
-            // Display the HTML web page
+            // HTML 웹 페이지 표시
             client.println("<!DOCTYPE html><html>");
             client.println("<head><meta name=\"viewport\" content=\"width=device-width, initial-scale=1\">");
             client.println("<link rel=\"icon\" href=\"data:,\">");
@@ -91,7 +91,7 @@ void loop(){
             client.println("td { border: none; padding: 12px; }");
             client.println(".sensor { color:white; font-weight: bold; background-color: #bcbcbc; padding: 1px; }");
             
-            // Web Page Heading
+            // 웹 페이지 제목
             client.println("</style></head><body><h1>BME280 Webserver</h1>");
             client.println("<table><tr><th>MEASUREMENT</th><th>VALUE</th></tr>");
             client.println("<tr><td>Temp. Celsius</td><td><span class=\"sensor\">");
@@ -111,21 +111,21 @@ void loop(){
             client.println(" %</span></td></tr>"); 
             client.println("</body></html>");
             
-            // The HTTP response ends with another blank line
+            // HTTP 응답이 다른 빈 줄로 끝납니다
             client.println();
-            // Break out of the while loop
+            // 중간 루프에서 벗어나십시오
             break;
-          } else { // if you got a newline, then clear currentLine
+          } else { // 새 줄이 있는 경우 현재 줄을 지웁니다
             currentLine = "";
           }
-        } else if (c != '\r') {  // if you got anything else but a carriage return character,
-          currentLine += c;      // add it to the end of the currentLine
+        } else if (c != '\r') {  // 캐리지 리턴 캐릭터 말고 다른 게 있다면,
+          currentLine += c;      // 현재 줄 끝에 추가합니다
         }
       }
     }
-    // Clear the header variable
+    // 헤더 변수 지우기
     header = "";
-    // Close the connection
+    // 연결을 닫습니다
     client.stop();
     Serial.println("Client disconnected.");
     Serial.println("");
